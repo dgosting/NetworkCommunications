@@ -149,10 +149,10 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
     if is_cwnd_test:
         time.sleep(offset)
         print("Starting delayed client on h2")
-        commands[h2] = h2.popen(h2_command, shell=True)
     else:
         print("Starting client on h2 immediately")
-        commands[h2] = h2.popen(h2_command, shell=True)
+
+    commands[h2] = h2.popen(h2_command, shell=True)
 
     # Wait for clients to finish sending all data for test
     commands[h1].wait(run_time - offset + 5)
