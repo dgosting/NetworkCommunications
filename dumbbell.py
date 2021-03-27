@@ -164,6 +164,8 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
 
     net.stop()
 
+    print("Finished test at ", datetime.now().strftime("%H:%M:%S"), ". Now parsing data from files....")
+
     # Parse the iperf data
     h1_time, h1_throughput, h1_cwnd = parse_iperf_data(h1_iperf_file, 0)
     h2_time, h2_throughput, h2_cwnd = parse_iperf_data(h2_iperf_file, offset)
@@ -200,8 +202,8 @@ if __name__ == '__main__':
 
     algorithms = ['cubic'] #, 'reno', 'htcp', 'bic']
     delays = [21] #, 81, 162]
-    runtime = 30
-    offset = 10
+    runtime = 2000
+    offset = 250
 
     for algorithm in algorithms:
         for delay in delays:
