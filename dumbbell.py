@@ -140,6 +140,9 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
     else:
         h2_command = iperf_command.format(h4.IP(), algorithm, run_time, h2_iperf_file)
 
+    # Pause main thread a few seconds to allow servers to startup
+    time.sleep(5)
+
     print("Starting client on h1")
     commands[h1] = h1.popen(h1_command, shell=True)
 
