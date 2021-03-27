@@ -98,7 +98,7 @@ def parse_iperf_data(filename, offset):
 
 def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
 
-    iperf_command = 'iperf3 -c {0} -p 5001 -i 1 -M 1460 -N -w 16m -C {1} -t {2} --logfile {3}'
+    iperf_command = 'iperf3 -c {0} -p 5001 -i 1 -4 -M 1460 -N -w 16m -C {1} -t {2} --logfile {3}'
 
     if is_cwnd_test:
         print("Running CWND Test:")
@@ -121,8 +121,8 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
 
     # Start iperf server on receiver hosts
     print("Starting servers on receiving hosts")
-    commands[h3] = h3.popen(['iperf3', '-s', '-p', '5001'])
-    commands[h4] = h4.popen(['iperf3', '-s', '-p', '5001'])
+    commands[h3] = h3.popen(['iperf3', '-s', '-p', '5001', '-4'])
+    commands[h4] = h4.popen(['iperf3', '-s', '-p', '5001', '-4'])
 
     test_name = "fairness"
     if is_cwnd_test:
