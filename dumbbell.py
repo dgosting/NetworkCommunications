@@ -152,15 +152,15 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
         commands[h2] = h2.popen(h2_command, shell=True)
 
     # Wait for clients to finish sending all data for test
-    commands[h1].wait()
-    commands[h2].wait()
+    commands[h1].wait(run_time - offset + 5)
+    commands[h2].wait(5)
 
     # Kill the server iperf processes
     commands[h3].terminate()
     commands[h4].terminate()
 
-    commands[h3].wait()
-    commands[h4].wait()
+    commands[h3].wait(5)
+    commands[h4].wait(5)
 
     net.stop()
 
