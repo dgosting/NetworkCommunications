@@ -21,7 +21,7 @@ import itertools
 import subprocess
 import sys
 import time
-import oscd .
+import os
 from mininet.cli import CLI
 from mininet.log import setLogLevel
 from mininet.net import Mininet
