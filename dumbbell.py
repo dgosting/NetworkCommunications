@@ -115,14 +115,16 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
     net = Mininet(topo=topo)
     net.start()
 
+    time.sleep(2)
+
     # Get references to all 4 hosts
     h1, h2, h3, h4 = net.getNodeByName('h1', 'h2', 'h3', 'h4')
     commands = dict()
 
     # Start iperf server on receiver hosts
     print("Starting servers on receiving hosts")
-    commands[h3] = h3.popen(['iperf3', '-s', '-p', '5001', '-4'])
-    commands[h4] = h4.popen(['iperf3', '-s', '-p', '5001', '-4'])
+    commands[h3] = h3.popen(['iperf3', '-s', '-p', '5001', '-4', '-w', '16m'])
+    commands[h4] = h4.popen(['iperf3', '-s', '-p', '5001', '-4', '-w', '16m'])
 
     test_name = "fairness"
     if is_cwnd_test:
@@ -155,15 +157,15 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
     commands[h2] = h2.popen(h2_command, shell=True)
 
     # Wait for clients to finish sending all data for test
-    commands[h1].wait(run_time - offset + 5)
-    commands[h2].wait(5)
+    commands[h1].wait(run_time - offset + 25)
+    commands[h2].wait()
 
     # Kill the server iperf processes
     commands[h3].terminate()
     commands[h4].terminate()
 
-    commands[h3].wait(5)
-    commands[h4].wait(5)
+    commands[h3].wait()
+    commands[h4].wait()
 
     net.stop()
 
@@ -175,8 +177,8 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
 
     if is_cwnd_test:
         fig, ax = plt.subplots()
-        ax.plot(h1_time, h1_cwnd, label="TCP Flow 1")
-        ax.plot(h2_time, h2_cwnd, label="TCP Flow 2")
+        ax.plot(h1_time, h1_cwnd, label="TCP Flow 1", linewidth=0.6)
+        ax.plot(h2_time, h2_cwnd, label="TCP Flow 2", linewidth=0.6)
 
         ax.set(xlabel='Time (seconds)',
                ylabel='Congestion Window (packets)',
@@ -186,8 +188,8 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
         fig.savefig(file_name)
     else:
         fig, ax = plt.subplots()
-        ax.plot(h1_time, h1_throughput, label="TCP Flow 1")
-        ax.plot(h2_time, h2_throughput, label="TCP Flow 2")
+        ax.plot(h1_time, h1_throughput, label="TCP Flow 1", linewidth=0.6)
+        ax.plot(h2_time, h2_throughput, label="TCP Flow 2", linewidth=0.6)
 
         ax.set(xlabel='Time (seconds)',
                ylabel='Throughput (Mbps)',
@@ -206,12 +208,12 @@ if __name__ == '__main__':
     algorithms = ['cubic'] #, 'reno', 'htcp', 'bic']
     delays = [21] #, 81, 162]
     runtime = 2000
-    offset = 250
+    _offset = 250
 
-    for algorithm in algorithms:
-        for delay in delays:
-            run_test(algorithm, delay, runtime / 2, 0, False)
-            run_test(algorithm, delay, runtime, offset, True)
+    for _algorithm in algorithms:
+        for _delay in delays:
+            run_test(_algorithm, _delay, runtime / 2, 0, False)
+            run_test(_algorithm, _delay, runtime, _offset, True)
 
 
 topos = {'dumbbell': (lambda: Dumbbell(21))}
