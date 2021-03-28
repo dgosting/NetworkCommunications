@@ -130,8 +130,8 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
 
         # Start iperf server on receiver hosts
         print("Starting servers on receiving hosts")
-        commands[h3] = h3.popen(['iperf3', '-s', '-p', '5001', '-4', '-w', '16m'])
-        commands[h4] = h4.popen(['iperf3', '-s', '-p', '5001', '-4', '-w', '16m'])
+        commands[h3] = h3.popen(['iperf3', '-s', '-p', '5001', '-4'])
+        commands[h4] = h4.popen(['iperf3', '-s', '-p', '5001', '-4'])
 
         # start iperf clients on client hosts
         h1_command = iperf_command.format(h3.IP(), algorithm, run_time, h1_iperf_file)
