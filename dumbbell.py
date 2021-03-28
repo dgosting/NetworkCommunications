@@ -100,10 +100,16 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
 
     iperf_command = 'iperf3 -c {0} -p 5001 -i 1 -4 -M 1460 -N -w 16m -C {1} -t {2} --logfile {3}'
 
+    test_name = "fairness"
+
     if is_cwnd_test:
         print("Running CWND Test:")
+        test_name = "cwnd"
     else:
         print("Running Fairness Test:")
+
+    h1_iperf_file = "h1_iperf3_{0}_{1}ms_{2}.txt".format(algorithm, delay, test_name)
+    h2_iperf_file = "h2_iperf3_{0}_{1}ms_{2}.txt".format(algorithm, delay, test_name)
 
     now = datetime.now()
     print("Starting Test at", now.strftime("%H:%M:%S"), "which will run for", run_time, "seconds.")
@@ -115,57 +121,54 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
     net = Mininet(topo=topo)
     net.start()
 
-    time.sleep(2)
+    try:
+        time.sleep(2)
 
-    # Get references to all 4 hosts
-    h1, h2, h3, h4 = net.getNodeByName('h1', 'h2', 'h3', 'h4')
-    commands = dict()
+        # Get references to all 4 hosts
+        h1, h2, h3, h4 = net.getNodeByName('h1', 'h2', 'h3', 'h4')
+        commands = dict()
 
-    # Start iperf server on receiver hosts
-    print("Starting servers on receiving hosts")
-    commands[h3] = h3.popen(['iperf3', '-s', '-p', '5001', '-4', '-w', '16m'])
-    commands[h4] = h4.popen(['iperf3', '-s', '-p', '5001', '-4', '-w', '16m'])
+        # Start iperf server on receiver hosts
+        print("Starting servers on receiving hosts")
+        commands[h3] = h3.popen(['iperf3', '-s', '-p', '5001', '-4', '-w', '16m'])
+        commands[h4] = h4.popen(['iperf3', '-s', '-p', '5001', '-4', '-w', '16m'])
 
-    test_name = "fairness"
-    if is_cwnd_test:
-        test_name = "cwnd"
+        # start iperf clients on client hosts
+        h1_command = iperf_command.format(h3.IP(), algorithm, run_time, h1_iperf_file)
 
-    h1_iperf_file = "h1_iperf3_{0}_{1}ms_{2}.txt".format(algorithm, delay, test_name)
-    h2_iperf_file = "h2_iperf3_{0}_{1}ms_{2}.txt".format(algorithm, delay, test_name)
+        if is_cwnd_test:
+            offset_time = run_time - offset
+            h2_command = iperf_command.format(h4.IP(), algorithm, offset_time, h2_iperf_file)
+        else:
+            h2_command = iperf_command.format(h4.IP(), algorithm, run_time, h2_iperf_file)
 
-    # start iperf clients on client hosts
-    h1_command = iperf_command.format(h3.IP(), algorithm, run_time, h1_iperf_file)
+        # Pause main thread a few seconds to allow servers to startup
+        time.sleep(5)
 
-    if is_cwnd_test:
-        offset_time = run_time - offset
-        h2_command = iperf_command.format(h4.IP(), algorithm, offset_time, h2_iperf_file)
-    else:
-        h2_command = iperf_command.format(h4.IP(), algorithm, run_time, h2_iperf_file)
+        print("Starting client on h1")
+        commands[h1] = h1.popen(h1_command, shell=True)
 
-    # Pause main thread a few seconds to allow servers to startup
-    time.sleep(5)
+        if is_cwnd_test:
+            time.sleep(offset)
+            print("Starting delayed client on h2")
+        else:
+            print("Starting client on h2 immediately")
 
-    print("Starting client on h1")
-    commands[h1] = h1.popen(h1_command, shell=True)
+        commands[h2] = h2.popen(h2_command, shell=True)
 
-    if is_cwnd_test:
-        time.sleep(offset)
-        print("Starting delayed client on h2")
-    else:
-        print("Starting client on h2 immediately")
+        # Wait for clients to finish sending all data for test
+        commands[h1].wait(run_time - offset + 25)
+        commands[h2].wait()
 
-    commands[h2] = h2.popen(h2_command, shell=True)
+        # Kill the server iperf processes
+        commands[h3].terminate()
+        commands[h4].terminate()
 
-    # Wait for clients to finish sending all data for test
-    commands[h1].wait(run_time - offset + 25)
-    commands[h2].wait()
+        commands[h3].wait()
+        commands[h4].wait()
 
-    # Kill the server iperf processes
-    commands[h3].terminate()
-    commands[h4].terminate()
-
-    commands[h3].wait()
-    commands[h4].wait()
+    except:
+         print("Exception occurred")
 
     net.stop()
 
@@ -200,20 +203,23 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
 
 
 if __name__ == '__main__':
-    # algorithm = sys.argv[1]
-    # delay = int(sys.argv[2])
-    # runtime = int(sys.argv[3])
-    # offset = int(sys.argv[4])
+    _algorithm = sys.argv[1]
+    _delay = int(sys.argv[2])
+    _runtime = int(sys.argv[3])
+    _offset = int(sys.argv[4])
 
-    algorithms = ['cubic'] #, 'reno', 'htcp', 'bic']
-    delays = [21] #, 81, 162]
-    runtime = 2000
-    _offset = 250
+    run_test(_algorithm, _delay, _runtime / 2, 0, False)
+    run_test(_algorithm, _delay, _runtime, _offset, True)
 
-    for _algorithm in algorithms:
-        for _delay in delays:
-            run_test(_algorithm, _delay, runtime / 2, 0, False)
-            run_test(_algorithm, _delay, runtime, _offset, True)
+    # algorithms = ['cubic'] #, 'reno', 'htcp', 'bic']
+    # delays = [21] #, 81, 162]
+    # runtime = 600
+    # _offset = 75
+    #
+    # for _algorithm in algorithms:
+    #     for _delay in delays:
+    #         run_test(_algorithm, _delay, runtime / 2, 0, False)
+    #         run_test(_algorithm, _delay, runtime, _offset, True)
 
 
 topos = {'dumbbell': (lambda: Dumbbell(21))}
