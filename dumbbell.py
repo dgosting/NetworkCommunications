@@ -111,6 +111,8 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
     h1_iperf_file = "h1_iperf3_{0}_{1}ms_{2}.txt".format(algorithm, delay, test_name)
     h2_iperf_file = "h2_iperf3_{0}_{1}ms_{2}.txt".format(algorithm, delay, test_name)
 
+    os.system("sudo mn -c")
+
     now = datetime.now()
     print("Starting Test at", now.strftime("%H:%M:%S"), "which will run for", run_time, "seconds.")
 
@@ -162,16 +164,9 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
         commands[h1].terminate()
         commands[h2].terminate()
 
-        # Wait for clients to finish sending all data for test
-        commands[h1].wait()
-        commands[h2].wait()
-
         # Kill the server iperf processes
         commands[h3].terminate()
         commands[h4].terminate()
-
-        commands[h3].wait()
-        commands[h4].wait()
 
     except:
          print("Exception occurred")
