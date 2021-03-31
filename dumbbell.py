@@ -205,25 +205,25 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
 
 
 if __name__ == '__main__':
-    _algorithm = sys.argv[1]
-    _delay = int(sys.argv[2])
-    _runtime = int(sys.argv[3])
-
-    if len(sys.argv) == 5:
-        _offset = int(sys.argv[4])
-        run_test(_algorithm, _delay, _runtime, _offset, True)
-    else:
-        run_test(_algorithm, _delay, _runtime, 0, False)
-
-    # algorithms = ['cubic'] #, 'reno', 'htcp', 'bic']
-    # delays = [21] #, 81, 162]
-    # runtime = 600
-    # _offset = 75
+    # _algorithm = sys.argv[1]
+    # _delay = int(sys.argv[2])
+    # _runtime = int(sys.argv[3])
     #
-    # for _algorithm in algorithms:
-    #     for _delay in delays:
-    #         run_test(_algorithm, _delay, runtime / 2, 0, False)
-    #         run_test(_algorithm, _delay, runtime, _offset, True)
+    # if len(sys.argv) == 5:
+    #     _offset = int(sys.argv[4])
+    #     run_test(_algorithm, _delay, _runtime, _offset, True)
+    # else:
+    #     run_test(_algorithm, _delay, _runtime, 0, False)
+
+    algorithms = ['cubic', 'reno', 'bbr', 'westwood']
+    delays = [21, 81, 162]
+    runtime = 600
+    _offset = 75
+
+    for _algorithm in algorithms:
+        for _delay in delays:
+            run_test(_algorithm, _delay, runtime, 0, False)
+            run_test(_algorithm, _delay, runtime, _offset, True)
 
 
 topos = {'dumbbell': (lambda: Dumbbell(21))}
