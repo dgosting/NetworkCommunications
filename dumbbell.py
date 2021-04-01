@@ -121,7 +121,7 @@ def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
     topo = Dumbbell(delay)
 
     # Create an instance of mininet and start it up
-    net = Mininet(topo=topo)
+    net = Mininet(topo=topo, controller=OVSController, link=TCLink)
     net.start()
 
     try:
@@ -215,10 +215,10 @@ if __name__ == '__main__':
     # else:
     #     run_test(_algorithm, _delay, _runtime, 0, False)
 
-    algorithms = ['cubic', 'reno', 'bbr', 'westwood']
+    algorithms = ['cubic'] #, 'reno', 'bbr', 'westwood']
     delays = [21, 81, 162]
-    runtime = 1000
-    _offset = 125
+    runtime = 64
+    _offset = 8
 
     for _algorithm in algorithms:
         for _delay in delays:
