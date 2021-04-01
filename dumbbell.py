@@ -215,10 +215,10 @@ if __name__ == '__main__':
     # else:
     #     run_test(_algorithm, _delay, _runtime, 0, False)
 
-    algorithms = ['cubic'] #, 'reno', 'bbr', 'westwood']
+    algorithms = ['cubic', 'reno', 'bbr', 'westwood']
     delays = [21, 81, 162]
-    runtime = 64
-    _offset = 8
+    runtime = 1000
+    _offset = 125
 
     for _algorithm in algorithms:
         for _delay in delays:
