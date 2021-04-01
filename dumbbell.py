@@ -217,8 +217,8 @@ if __name__ == '__main__':
 
     algorithms = ['cubic', 'reno', 'bbr', 'westwood']
     delays = [21, 81, 162]
-    runtime = 600
-    _offset = 75
+    runtime = 1000
+    _offset = 125
 
     for _algorithm in algorithms:
         for _delay in delays:
