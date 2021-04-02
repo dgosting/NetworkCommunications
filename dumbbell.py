@@ -98,13 +98,15 @@ def parse_iperf_data(filename, offset):
 
 
 def run_test(algorithm, delay, run_time):
+    # Clean up previous Mininet run
+    os.system("sudo mn -c")
 
-    iperf_client_command = 'iperf3 -c {0} -p 5001 -i 1 -M 1500 -C {1} -t {2} > {3} &'
-    iperf_server_command = 'iperf3 -s -p 5001 &'
     kill_iperf = 'pkill iperf3'
 
-    h1_iperf_file = "h1_iperf3_{0}_{1}ms_{2}.txt"
-    h2_iperf_file = "h2_iperf3_{0}_{1}ms_{2}.txt"
+    h1_iperf_file = "h1_iperf3_{0}_{1}ms.txt".format(algorithm, delay)
+    h2_iperf_file = "h2_iperf3_{0}_{1}ms.txt".format(algorithm, delay)
+    h3_iperf_file = "h3_iperf3_{0}_{1}ms.txt".format(algorithm, delay)
+    h4_iperf_file = "h4_iperf3_{0}_{1}ms.txt".format(algorithm, delay)
 
     print("Creating topology with delay: {0}ms".format(delay))
     topo = Dumbbell(delay)
@@ -120,14 +122,12 @@ def run_test(algorithm, delay, run_time):
     print("Starting Fairness test at", datetime.now().strftime("%H:%M:%S"))
 
     print("Starting TCP Flow #1")
-    h1_fairness_file = h1_iperf_file.format(algorithm, delay, "fairness")
-    h3.cmd(iperf_server_command)
-    h1.cmd(iperf_client_command.format(h3.IP(), algorithm, run_time, h1_fairness_file))
+    h3.cmd('iperf3 -s -p 5001 -i 1 > {0} &'.format(h3_iperf_file))
+    h1.cmd('iperf3 -c {0} -p 5001 -M 1500 -C {1} -t {2} &'.format(h3.IP(), algorithm, run_time))
 
     print("Starting TCP Flow #2")
-    h2_fairness_file = h2_iperf_file.format(algorithm, delay, "fairness")
-    h4.cmd(iperf_server_command)
-    h2.cmd(iperf_client_command.format(h4.IP(), algorithm, run_time, h2_fairness_file))
+    h4.cmd('iperf3 -s -p 5001 -i 1 > {0} &'.format(h4_iperf_file))
+    h2.cmd('iperf3 -c {0} -p 5001 -M 1500 -C {1} -t {2} &'.format(h4.IP(), algorithm, run_time))
 
     time.sleep(run_time + 2)
 
@@ -138,9 +138,8 @@ def run_test(algorithm, delay, run_time):
 
     print("Starting TCP Flow #1")
     flow1_run_time = 2 * run_time
-    h1_cwnd_file = h1_iperf_file.format(algorithm, delay, "cwnd")
-    h3.cmd(iperf_server_command)
-    h1.cmd(iperf_client_command.format(h3.IP(), algorithm, flow1_run_time, h1_cwnd_file))
+    h3.cmd('iperf3 -s -p 5002 &')
+    h1.cmd('iperf3 -c {0} -p 5002 -i 1 -M 1500 -C {1} -t {2} > {3} &'.format(h3.IP(), algorithm, flow1_run_time, h1_iperf_file))
 
     offset = int(runtime * .25)
 
@@ -150,9 +149,8 @@ def run_test(algorithm, delay, run_time):
     print("Starting TCP Flow #2")
     flow2_run_time = int(1.75 * run_time)
 
-    h2_cwnd_file = h2_iperf_file.format(algorithm, delay, "cwnd")
-    h4.cmd(iperf_server_command)
-    h2.cmd(iperf_client_command.format(h4.IP(), algorithm, flow2_run_time, h2_cwnd_file))
+    h4.cmd('iperf3 -s -p 5002 &')
+    h2.cmd('iperf3 -c {0} -p 5002 -i 1 -M 1500 -C {1} -t {2} > {3} &'.format(h4.IP(), algorithm, flow2_run_time, h2_iperf_file))
 
     time.sleep(flow2_run_time + 2)
 
@@ -163,8 +161,8 @@ def run_test(algorithm, delay, run_time):
     print("Finished test at ", datetime.now().strftime("%H:%M:%S"), ". Now parsing data from files....")
 
     # Make plot for CWND
-    h1_time, h1_throughput, h1_cwnd = parse_iperf_data(h1_cwnd_file, 0)
-    h2_time, h2_throughput, h2_cwnd = parse_iperf_data(h2_cwnd_file, offset)
+    h1_time, h1_throughput, h1_cwnd = parse_iperf_data(h3_iperf_file, 0)
+    h2_time, h2_throughput, h2_cwnd = parse_iperf_data(h4_iperf_file, offset)
     fig, ax = plt.subplots()
     ax.plot(h1_time, h1_cwnd, label="TCP Flow 1", linewidth=0.6)
     ax.plot(h2_time, h2_cwnd, label="TCP Flow 2", linewidth=0.6)
@@ -177,8 +175,8 @@ def run_test(algorithm, delay, run_time):
     fig.savefig(file_name)
 
     # Make plot for Fairness
-    h1_time, h1_throughput, h1_cwnd = parse_iperf_data(h1_fairness_file, 0)
-    h2_time, h2_throughput, h2_cwnd = parse_iperf_data(h2_fairness_file, offset)
+    h1_time, h1_throughput, h1_cwnd = parse_iperf_data(h1_iperf_file, 0)
+    h2_time, h2_throughput, h2_cwnd = parse_iperf_data(h2_iperf_file, offset)
     fig, ax = plt.subplots()
 
     ax.plot(h1_time, h1_throughput, label="TCP Flow 1", linewidth=0.6)
@@ -193,11 +191,7 @@ def run_test(algorithm, delay, run_time):
     fig.savefig(file_name)
 
 
-
 if __name__ == '__main__':
-
-    # Clean up previous Mininet run
-    os.system("sudo mn -c")
 
     algorithms = ['cubic'] #, 'reno', 'bbr', 'westwood']
     delays = [21] #, 81, 162]
