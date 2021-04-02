@@ -127,7 +127,7 @@ def run_test(algorithm, delay, run_time):
     print("Starting TCP Flow #2")
     h2_fairness_file = h2_iperf_file.format(algorithm, delay, "fairness")
     h4.cmd(iperf_server_command)
-    h2.cmd(iperf_client_command.format(h3.IP(), algorithm, run_time, h2_fairness_file))
+    h2.cmd(iperf_client_command.format(h4.IP(), algorithm, run_time, h2_fairness_file))
 
     time.sleep(run_time + 2)
 
@@ -152,7 +152,7 @@ def run_test(algorithm, delay, run_time):
 
     h2_cwnd_file = h2_iperf_file.format(algorithm, delay, "cwnd")
     h4.cmd(iperf_server_command)
-    h2.cmd(iperf_client_command.format(h3.IP(), algorithm, flow2_run_time, h2_cwnd_file))
+    h2.cmd(iperf_client_command.format(h4.IP(), algorithm, flow2_run_time, h2_cwnd_file))
 
     time.sleep(flow2_run_time + 2)
 
@@ -197,7 +197,7 @@ if __name__ == '__main__':
 
     algorithms = ['cubic'] #, 'reno', 'bbr', 'westwood']
     delays = [21] #, 81, 162]
-    runtime = 300
+    runtime = 64
 
     for _algorithm in algorithms:
         for _delay in delays:
