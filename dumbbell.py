@@ -44,13 +44,13 @@ class Dumbbell(Topo):
 
         # Link the left and right backbone routers with a delay
         delayStr = str(delay) + 'ms'
-        self.addLink(s1, s2, bw=984, cls=TCLink, delay=delayStr, max_queue_size=82 * delay, use_htb=True)
+        self.addLink(s1, s2, bw=984, delay=delayStr, use_htb=True)
 
         # Link the left access router to the left backbone router
-        self.addLink(s1, s3, bw=252, cls=TCLink, delay='0ms', max_queue_size=.2 * 21 * delay, use_htb=True)
+        self.addLink(s1, s3, bw=252, max_queue_size=.2 * 21 * delay, use_htb=True)
 
         # Link the right access router to the right backbone router
-        self.addLink(s2, s4, bw=252, cls=TCLink, delay='0ms', max_queue_size=.2 * 21 * delay, use_htb=True)
+        self.addLink(s2, s4, bw=252, max_queue_size=.2 * 21 * delay, use_htb=True)
 
         # Add hosts
         h1 = self.addHost('h1')
@@ -59,12 +59,12 @@ class Dumbbell(Topo):
         h4 = self.addHost('h4')
 
         # Link two hosts to the left access router
-        self.addLink(h1, s3, cls=TCLink, bw=960)
-        self.addLink(h2, s3, cls=TCLink, bw=960)
+        self.addLink(h1, s3, bw=960)
+        self.addLink(h2, s3, bw=960)
 
         # Link two hosts to the right access router
-        self.addLink(h3, s4, cls=TCLink, bw=960)
-        self.addLink(h4, s4, cls=TCLink, bw=960)
+        self.addLink(h3, s4, bw=960)
+        self.addLink(h4, s4, bw=960)
 
 
 def parse_iperf_data(filename, offset):
@@ -97,133 +97,112 @@ def parse_iperf_data(filename, offset):
     return time_data, throughput, cwnd
 
 
-def run_test(algorithm, delay, run_time, offset, is_cwnd_test):
+def run_test(algorithm, delay, run_time):
 
-    iperf_command = 'iperf3 -c {0} -p 5001 -i 1 -4 -M 1460 -N -w 16m -C {1} -t {2} --logfile {3}'
+    iperf_client_command = 'iperf3 -c {0} -p 5001 -i 1 -M 1500 -C {1} -t {2} > {3}'
+    iperf_server_command = 'iperf3 -s -p 5001'
+    run_in_background = ' &'
+    kill_iperf = 'pkill iperf3'
 
-    test_name = "fairness"
+    h1_iperf_file = "h1_iperf3_{0}_{1}ms_{2}.txt"
+    h2_iperf_file = "h2_iperf3_{0}_{1}ms_{2}.txt"
 
-    if is_cwnd_test:
-        print("Running CWND Test:")
-        test_name = "cwnd"
-    else:
-        print("Running Fairness Test:")
-
-    h1_iperf_file = "h1_iperf3_{0}_{1}ms_{2}.txt".format(algorithm, delay, test_name)
-    h2_iperf_file = "h2_iperf3_{0}_{1}ms_{2}.txt".format(algorithm, delay, test_name)
-
-    os.system("sudo mn -c")
-
-    now = datetime.now()
-    print("Starting Test at", now.strftime("%H:%M:%S"), "which will run for", run_time, "seconds.")
-
-    # Create the topology using the specified delay
+    print("Creating topology with delay: {0}ms".format(delay))
     topo = Dumbbell(delay)
 
     # Create an instance of mininet and start it up
     net = Mininet(topo=topo, controller=OVSController, link=TCLink)
+
+    print("Starting the Mininet instance")
     net.start()
 
-    try:
-        time.sleep(2)
+    h1, h2, h3, h4 = net.getNodeByName('h1', 'h2', 'h3', 'h4')
 
-        # Get references to all 4 hosts
-        h1, h2, h3, h4 = net.getNodeByName('h1', 'h2', 'h3', 'h4')
-        commands = dict()
+    print("Starting Fairness test at", datetime.now().strftime("%H:%M:%S"))
 
-        # Start iperf server on receiver hosts
-        print("Starting servers on receiving hosts")
-        commands[h3] = h3.popen(['iperf3', '-s', '-p', '5001', '-4'])
-        commands[h4] = h4.popen(['iperf3', '-s', '-p', '5001', '-4'])
+    print("Starting TCP Flow #1")
+    h1_fairness_file = h1_iperf_file.format(algorithm, delay, "fairness")
+    h3.cmd(iperf_server_command + run_in_background)
+    h1.cmd(iperf_client_command.format(h3.IP(), algorithm, run_time, h1_fairness_file) + run_in_background)
 
-        # start iperf clients on client hosts
-        h1_command = iperf_command.format(h3.IP(), algorithm, run_time, h1_iperf_file)
+    print("Starting TCP Flow #2")
+    h2_fairness_file = h2_iperf_file.format(algorithm, delay, "fairness")
+    h4.cmd(iperf_server_command + run_in_background)
+    h2.cmd(iperf_client_command.format(h3.IP(), algorithm, run_time, h2_fairness_file))
 
-        if is_cwnd_test:
-            offset_time = run_time - offset
-            h2_command = iperf_command.format(h4.IP(), algorithm, offset_time, h2_iperf_file)
-        else:
-            h2_command = iperf_command.format(h4.IP(), algorithm, run_time, h2_iperf_file)
+    time.sleep(2)
 
-        # Pause main thread a few seconds to allow servers to startup
-        time.sleep(5)
+    h3.cmd(kill_iperf)
+    h4.cmd(kill_iperf)
 
-        print("Starting client on h1")
-        commands[h1] = h1.popen(h1_command, shell=True)
+    print("Starting CWND test at", datetime.now().strftime("%H:%M:%S"))
 
-        if is_cwnd_test:
-            time.sleep(offset)
-            print("Starting delayed client on h2")
-        else:
-            print("Starting client on h2 immediately")
+    print("Starting TCP Flow #1")
+    flow1_run_time = 2 * run_time
+    h1_cwnd_file = h1_iperf_file.format(algorithm, delay, "cwnd")
+    h3.cmd(iperf_server_command + run_in_background)
+    h1.cmd(iperf_client_command.format(h3.IP(), algorithm, flow1_run_time, h1_cwnd_file) + run_in_background)
 
-        commands[h2] = h2.popen(h2_command, shell=True)
+    offset = int(runtime * .25)
 
-        time.sleep(run_time - offset + 30)
+    print("Waiting {0} seconds...".format(offset))
+    time.sleep(offset)
 
-        # Kill the server iperf processes
-        commands[h1].terminate()
-        commands[h2].terminate()
+    print("Starting TCP Flow #2")
+    flow2_run_time = int(1.75 * run_time)
 
-        # Kill the server iperf processes
-        commands[h3].terminate()
-        commands[h4].terminate()
+    h2_cwnd_file = h2_iperf_file.format(algorithm, delay, "cwnd")
+    h4.cmd(iperf_server_command + run_in_background)
+    h2.cmd(iperf_client_command.format(h3.IP(), algorithm, flow2_run_time, h2_cwnd_file))
 
-    except:
-         print("Exception occurred")
+    time.sleep(2)
 
+    h3.cmd(kill_iperf)
+    h4.cmd(kill_iperf)
     net.stop()
 
     print("Finished test at ", datetime.now().strftime("%H:%M:%S"), ". Now parsing data from files....")
 
     # Parse the iperf data
-    h1_time, h1_throughput, h1_cwnd = parse_iperf_data(h1_iperf_file, 0)
-    h2_time, h2_throughput, h2_cwnd = parse_iperf_data(h2_iperf_file, offset)
-
-    if is_cwnd_test:
-        fig, ax = plt.subplots()
-        ax.plot(h1_time, h1_cwnd, label="TCP Flow 1", linewidth=0.6)
-        ax.plot(h2_time, h2_cwnd, label="TCP Flow 2", linewidth=0.6)
-
-        ax.set(xlabel='Time (seconds)',
-               ylabel='Congestion Window (packets)',
-               title=algorithm.upper() + " with Delay: " + str(delay) + "ms")
-        ax.legend()
-        file_name = "cwnd_" + algorithm + "_" + str(delay) + "ms.png"
-        fig.savefig(file_name)
-    else:
-        fig, ax = plt.subplots()
-        ax.plot(h1_time, h1_throughput, label="TCP Flow 1", linewidth=0.6)
-        ax.plot(h2_time, h2_throughput, label="TCP Flow 2", linewidth=0.6)
-
-        ax.set(xlabel='Time (seconds)',
-               ylabel='Throughput (Mbps)',
-               title=algorithm.upper() + " with Delay: " + str(delay) + "ms")
-        ax.legend()
-        file_name = "fairness_" + algorithm + "_" + str(delay) + "ms.png"
-        fig.savefig(file_name)
+    # h1_time, h1_throughput, h1_cwnd = parse_iperf_data(h1_iperf_file, 0)
+    # h2_time, h2_throughput, h2_cwnd = parse_iperf_data(h2_iperf_file, offset)
+    #
+    # if is_cwnd_test:
+    #     fig, ax = plt.subplots()
+    #     ax.plot(h1_time, h1_cwnd, label="TCP Flow 1", linewidth=0.6)
+    #     ax.plot(h2_time, h2_cwnd, label="TCP Flow 2", linewidth=0.6)
+    #
+    #     ax.set(xlabel='Time (seconds)',
+    #            ylabel='Congestion Window (packets)',
+    #            title=algorithm.upper() + " with Delay: " + str(delay) + "ms")
+    #     ax.legend()
+    #     file_name = "cwnd_" + algorithm + "_" + str(delay) + "ms.png"
+    #     fig.savefig(file_name)
+    # else:
+    #     fig, ax = plt.subplots()
+    #     ax.plot(h1_time, h1_throughput, label="TCP Flow 1", linewidth=0.6)
+    #     ax.plot(h2_time, h2_throughput, label="TCP Flow 2", linewidth=0.6)
+    #
+    #     ax.set(xlabel='Time (seconds)',
+    #            ylabel='Throughput (Mbps)',
+    #            title=algorithm.upper() + " with Delay: " + str(delay) + "ms")
+    #     ax.legend()
+    #     file_name = "fairness_" + algorithm + "_" + str(delay) + "ms.png"
+    #     fig.savefig(file_name)
 
 
 if __name__ == '__main__':
-    # _algorithm = sys.argv[1]
-    # _delay = int(sys.argv[2])
-    # _runtime = int(sys.argv[3])
-    #
-    # if len(sys.argv) == 5:
-    #     _offset = int(sys.argv[4])
-    #     run_test(_algorithm, _delay, _runtime, _offset, True)
-    # else:
-    #     run_test(_algorithm, _delay, _runtime, 0, False)
 
-    algorithms = ['cubic', 'reno', 'bbr', 'westwood']
-    delays = [21, 81, 162]
-    runtime = 1000
-    _offset = 125
+    # Clean up previous Mininet run
+    os.system("sudo mn -c")
+
+    algorithms = ['cubic'] #, 'reno', 'bbr', 'westwood']
+    delays = [21] #, 81, 162]
+    runtime = 300
 
     for _algorithm in algorithms:
         for _delay in delays:
-            run_test(_algorithm, _delay, runtime, 0, False)
-            run_test(_algorithm, _delay, runtime, _offset, True)
+            run_test(_algorithm, _delay, runtime)
 
 
 topos = {'dumbbell': (lambda: Dumbbell(21))}
