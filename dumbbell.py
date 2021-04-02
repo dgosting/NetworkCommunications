@@ -162,32 +162,36 @@ def run_test(algorithm, delay, run_time):
 
     print("Finished test at ", datetime.now().strftime("%H:%M:%S"), ". Now parsing data from files....")
 
-    # Parse the iperf data
-    # h1_time, h1_throughput, h1_cwnd = parse_iperf_data(h1_iperf_file, 0)
-    # h2_time, h2_throughput, h2_cwnd = parse_iperf_data(h2_iperf_file, offset)
-    #
-    # if is_cwnd_test:
-    #     fig, ax = plt.subplots()
-    #     ax.plot(h1_time, h1_cwnd, label="TCP Flow 1", linewidth=0.6)
-    #     ax.plot(h2_time, h2_cwnd, label="TCP Flow 2", linewidth=0.6)
-    #
-    #     ax.set(xlabel='Time (seconds)',
-    #            ylabel='Congestion Window (packets)',
-    #            title=algorithm.upper() + " with Delay: " + str(delay) + "ms")
-    #     ax.legend()
-    #     file_name = "cwnd_" + algorithm + "_" + str(delay) + "ms.png"
-    #     fig.savefig(file_name)
-    # else:
-    #     fig, ax = plt.subplots()
-    #     ax.plot(h1_time, h1_throughput, label="TCP Flow 1", linewidth=0.6)
-    #     ax.plot(h2_time, h2_throughput, label="TCP Flow 2", linewidth=0.6)
-    #
-    #     ax.set(xlabel='Time (seconds)',
-    #            ylabel='Throughput (Mbps)',
-    #            title=algorithm.upper() + " with Delay: " + str(delay) + "ms")
-    #     ax.legend()
-    #     file_name = "fairness_" + algorithm + "_" + str(delay) + "ms.png"
-    #     fig.savefig(file_name)
+    # Make plot for CWND
+    h1_time, h1_throughput, h1_cwnd = parse_iperf_data(h1_cwnd_file, 0)
+    h2_time, h2_throughput, h2_cwnd = parse_iperf_data(h2_cwnd_file, offset)
+    fig, ax = plt.subplots()
+    ax.plot(h1_time, h1_cwnd, label="TCP Flow 1", linewidth=0.6)
+    ax.plot(h2_time, h2_cwnd, label="TCP Flow 2", linewidth=0.6)
+
+    ax.set(xlabel='Time (seconds)',
+           ylabel='Congestion Window (packets)',
+           title=algorithm.upper() + " with Delay: " + str(delay) + "ms")
+    ax.legend()
+    file_name = "cwnd_" + algorithm + "_" + str(delay) + "ms.png"
+    fig.savefig(file_name)
+
+    # Make plot for Fairness
+    h1_time, h1_throughput, h1_cwnd = parse_iperf_data(h1_fairness_file, 0)
+    h2_time, h2_throughput, h2_cwnd = parse_iperf_data(h2_fairness_file, offset)
+    fig, ax = plt.subplots()
+
+    ax.plot(h1_time, h1_throughput, label="TCP Flow 1", linewidth=0.6)
+    ax.plot(h2_time, h2_throughput, label="TCP Flow 2", linewidth=0.6)
+
+    ax.set(xlabel='Time (seconds)',
+           ylabel='Throughput (Mbps)',
+           title=algorithm.upper() + " with Delay: " + str(delay) + "ms")
+
+    ax.legend()
+    file_name = "fairness_" + algorithm + "_" + str(delay) + "ms.png"
+    fig.savefig(file_name)
+
 
 
 if __name__ == '__main__':
