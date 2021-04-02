@@ -126,8 +126,8 @@ def run_test(algorithm, delay, run_time):
     h1.cmd('iperf3 -c {0} -p 5001 -M 1500 -C {1} -t {2} &'.format(h3.IP(), algorithm, run_time))
 
     print("Starting TCP Flow #2")
-    h4.cmd('iperf3 -s -p 5001 -i 1 > {0} &'.format(h4_iperf_file))
-    h2.cmd('iperf3 -c {0} -p 5001 -M 1500 -C {1} -t {2} &'.format(h4.IP(), algorithm, run_time))
+    h4.cmd('iperf3 -s -p 5002 -i 1 > {0} &'.format(h4_iperf_file))
+    h2.cmd('iperf3 -c {0} -p 5002 -M 1500 -C {1} -t {2} &'.format(h4.IP(), algorithm, run_time))
 
     time.sleep(run_time + 2)
 
@@ -138,8 +138,8 @@ def run_test(algorithm, delay, run_time):
 
     print("Starting TCP Flow #1")
     flow1_run_time = 2 * run_time
-    h3.cmd('iperf3 -s -p 5002 &')
-    h1.cmd('iperf3 -c {0} -p 5002 -i 1 -M 1500 -C {1} -t {2} > {3} &'.format(h3.IP(), algorithm, flow1_run_time, h1_iperf_file))
+    h3.cmd('iperf3 -s -p 5003 &')
+    h1.cmd('iperf3 -c {0} -p 5003 -i 1 -M 1500 -C {1} -t {2} > {3} &'.format(h3.IP(), algorithm, flow1_run_time, h1_iperf_file))
 
     offset = int(runtime * .25)
 
@@ -149,8 +149,8 @@ def run_test(algorithm, delay, run_time):
     print("Starting TCP Flow #2")
     flow2_run_time = int(1.75 * run_time)
 
-    h4.cmd('iperf3 -s -p 5002 &')
-    h2.cmd('iperf3 -c {0} -p 5002 -i 1 -M 1500 -C {1} -t {2} > {3} &'.format(h4.IP(), algorithm, flow2_run_time, h2_iperf_file))
+    h4.cmd('iperf3 -s -p 5004 &')
+    h2.cmd('iperf3 -c {0} -p 5004 -i 1 -M 1500 -C {1} -t {2} > {3} &'.format(h4.IP(), algorithm, flow2_run_time, h2_iperf_file))
 
     time.sleep(flow2_run_time + 2)
 
