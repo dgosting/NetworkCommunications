@@ -99,9 +99,8 @@ def parse_iperf_data(filename, offset):
 
 def run_test(algorithm, delay, run_time):
 
-    iperf_client_command = 'iperf3 -c {0} -p 5001 -i 1 -M 1500 -C {1} -t {2} > {3}'
-    iperf_server_command = 'iperf3 -s -p 5001'
-    run_in_background = ' &'
+    iperf_client_command = 'iperf3 -c {0} -p 5001 -i 1 -M 1500 -C {1} -t {2} > {3} &'
+    iperf_server_command = 'iperf3 -s -p 5001 &'
     kill_iperf = 'pkill iperf3'
 
     h1_iperf_file = "h1_iperf3_{0}_{1}ms_{2}.txt"
@@ -122,15 +121,15 @@ def run_test(algorithm, delay, run_time):
 
     print("Starting TCP Flow #1")
     h1_fairness_file = h1_iperf_file.format(algorithm, delay, "fairness")
-    h3.cmd(iperf_server_command + run_in_background)
-    h1.cmd(iperf_client_command.format(h3.IP(), algorithm, run_time, h1_fairness_file) + run_in_background)
+    h3.cmd(iperf_server_command)
+    h1.cmd(iperf_client_command.format(h3.IP(), algorithm, run_time, h1_fairness_file))
 
     print("Starting TCP Flow #2")
     h2_fairness_file = h2_iperf_file.format(algorithm, delay, "fairness")
-    h4.cmd(iperf_server_command + run_in_background)
+    h4.cmd(iperf_server_command)
     h2.cmd(iperf_client_command.format(h3.IP(), algorithm, run_time, h2_fairness_file))
 
-    time.sleep(2)
+    time.sleep(run_time + 2)
 
     h3.cmd(kill_iperf)
     h4.cmd(kill_iperf)
@@ -140,8 +139,8 @@ def run_test(algorithm, delay, run_time):
     print("Starting TCP Flow #1")
     flow1_run_time = 2 * run_time
     h1_cwnd_file = h1_iperf_file.format(algorithm, delay, "cwnd")
-    h3.cmd(iperf_server_command + run_in_background)
-    h1.cmd(iperf_client_command.format(h3.IP(), algorithm, flow1_run_time, h1_cwnd_file) + run_in_background)
+    h3.cmd(iperf_server_command)
+    h1.cmd(iperf_client_command.format(h3.IP(), algorithm, flow1_run_time, h1_cwnd_file))
 
     offset = int(runtime * .25)
 
@@ -152,10 +151,10 @@ def run_test(algorithm, delay, run_time):
     flow2_run_time = int(1.75 * run_time)
 
     h2_cwnd_file = h2_iperf_file.format(algorithm, delay, "cwnd")
-    h4.cmd(iperf_server_command + run_in_background)
+    h4.cmd(iperf_server_command)
     h2.cmd(iperf_client_command.format(h3.IP(), algorithm, flow2_run_time, h2_cwnd_file))
 
-    time.sleep(2)
+    time.sleep(flow2_run_time + 2)
 
     h3.cmd(kill_iperf)
     h4.cmd(kill_iperf)
