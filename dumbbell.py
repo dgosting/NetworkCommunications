@@ -54,7 +54,7 @@ class Dumbbell(Topo):
         self.addLink(s3, s1, bw=252, max_queue_size=buffer_size, use_htb=True)
 
         # Link the left and right backbone routers with a delay
-        self.addLink(s1, s2, bw=984, delay=str(delay) + 'ms', use_htb=True)
+        self.addLink(s1, s2, bw=984, delay=str(delay) + 'ms', use_htb=True, loss=1)
 
         # Link the right access router to the right backbone router
         self.addLink(s4, s2, bw=252, max_queue_size=buffer_size, use_htb=True)
@@ -134,7 +134,7 @@ def run_test(algorithm, delay, run_time):
 
     h1, h2, h3, h4 = net.getNodeByName('h1', 'h2', 'h3', 'h4')
 
-    # CLI(net)
+    CLI(net)
 
     print("Starting Fairness test at", datetime.now().strftime("%H:%M:%S"))
 
