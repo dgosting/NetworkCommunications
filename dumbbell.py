@@ -49,21 +49,21 @@ class Dumbbell(Topo):
         h4 = self.addHost('h4')
 
         # Link the left access router to the left backbone router
-        self.addLink(s3, s1, bw=252, max_queue_size=.2 * 21 * delay, use_htb=True)
+        self.addLink(s3, s1, bw=252, max_queue_size=.2 * 21 * delay, link=TCLink, use_htb=True)
 
         # Link the left and right backbone routers with a delay
-        self.addLink(s1, s2, bw=984, delay=str(delay) + 'ms', use_htb=True)
+        self.addLink(s1, s2, bw=984, delay=str(delay) + 'ms', link=TCLink, use_htb=True)
 
         # Link the right access router to the right backbone router
-        self.addLink(s4, s2, bw=252, max_queue_size=.2 * 21 * delay, use_htb=True)
+        self.addLink(s4, s2, bw=252, max_queue_size=.2 * 21 * delay, link=TCLink, use_htb=True)
 
         # Link two hosts to the left access router
-        self.addLink(h1, s3, bw=960)
-        self.addLink(h2, s3, bw=960)
+        self.addLink(h1, s3, bw=960, link=TCLink)
+        self.addLink(h2, s3, bw=960, link=TCLink)
 
         # Link two hosts to the right access router
-        self.addLink(h3, s4, bw=960)
-        self.addLink(h4, s4, bw=960)
+        self.addLink(h3, s4, bw=960, link=TCLink)
+        self.addLink(h4, s4, bw=960, link=TCLink)
 
 
 def parse_cwnd_data(filename, offset):
