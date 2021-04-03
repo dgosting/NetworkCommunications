@@ -101,7 +101,7 @@ def parse_throughput_data(filename):
 
         lines = iperf_file.readlines()
 
-        for line_num in range(3, len(lines) - 6):
+        for line_num in range(7, len(lines) - 14):
             line = lines[line_num].split()
             throughput.append(float(line[6]))
 
@@ -132,7 +132,7 @@ def run_test(algorithm, delay, run_time):
 
     h1, h2, h3, h4 = net.getNodeByName('h1', 'h2', 'h3', 'h4')
 
-    CLI(net)
+    # CLI(net)
 
     print("Starting Fairness test at", datetime.now().strftime("%H:%M:%S"))
 
@@ -214,7 +214,7 @@ if __name__ == '__main__':
 
     algorithms = ['cubic'] #, 'reno', 'bbr', 'westwood']
     delays = [21] #, 81, 162]
-    runtime = 300
+    runtime = 60
 
     for _algorithm in algorithms:
         for _delay in delays:
