@@ -132,7 +132,7 @@ def run_test(algorithm, delay, run_time):
 
     h1, h2, h3, h4 = net.getNodeByName('h1', 'h2', 'h3', 'h4')
 
-    # CLI(net)
+    CLI(net)
 
     print("Starting Fairness test at", datetime.now().strftime("%H:%M:%S"))
 
@@ -214,9 +214,9 @@ def run_test(algorithm, delay, run_time):
 
 if __name__ == '__main__':
 
-    algorithms = ['cubic', 'reno', 'bbr', 'westwood']
+    algorithms = ['cubic'] # , 'reno', 'bbr', 'westwood']
     delays = [21] #, 81, 162]
-    runtime = 1000
+    runtime = 60
 
     for _algorithm in algorithms:
         for _delay in delays:
