@@ -52,7 +52,7 @@ class Dumbbell(Topo):
         self.addLink(s3, s1, bw=252, max_queue_size=.2 * 21 * delay, use_htb=True)
 
         # Link the left and right backbone routers with a delay
-        self.addLink(s1, s2, bw=984, delay=str(delay) + 'ms', loss=1, use_htb=True)
+        self.addLink(s1, s2, bw=984, delay=str(delay) + 'ms', use_htb=True)
 
         # Link the right access router to the right backbone router
         self.addLink(s4, s2, bw=252, max_queue_size=.2 * 21 * delay, use_htb=True)
@@ -76,7 +76,7 @@ def parse_cwnd_data(filename, offset):
 
         lines = iperf_file.readlines()
 
-        for line_num in range(3, len(lines) - 6):
+        for line_num in range(4, len(lines) - 8):
             line = lines[line_num].split()
 
             cwnd_temp = float(line[9])
@@ -101,7 +101,7 @@ def parse_throughput_data(filename):
 
         lines = iperf_file.readlines()
 
-        for line_num in range(7, len(lines) - 14):
+        for line_num in range(8, len(lines) - 16):
             line = lines[line_num].split()
             throughput.append(float(line[6]))
 
