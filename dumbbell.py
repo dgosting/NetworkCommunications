@@ -218,7 +218,7 @@ if __name__ == '__main__':
 
     algorithms = ['cubic'] # , 'reno', 'bbr', 'westwood']
     delays = [21] #, 81, 162]
-    runtime = 120
+    runtime = 1000
 
     for _algorithm in algorithms:
         for _delay in delays:
