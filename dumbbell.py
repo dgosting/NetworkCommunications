@@ -139,12 +139,12 @@ def run_test(algorithm, delay, run_time):
     print("Starting Fairness test at", datetime.now().strftime("%H:%M:%S"))
 
     print("Starting TCP Flow #1")
-    h3.cmd('nohup iperf3 -s -p 5001 -i 1 > {0} &'.format(h3_iperf_file))
-    h1.cmd('nohup iperf3 -c {0} -p 5001 -M 1500 -C {1} -t {2} &'.format(h3.IP(), algorithm, run_time))
+    h3.cmd('nohup iperf3 -s -p 5001 &')
+    h1.cmd('nohup iperf3 -c {0} -p 5001 -M 1500 -C {1} -t {2} -i 1 > {3} &'.format(h3.IP(), algorithm, run_time, h3_iperf_file))
 
     print("Starting TCP Flow #2")
-    h4.cmd('nohup iperf3 -s -p 5002 -i 1 > {0} &'.format(h4_iperf_file))
-    h2.cmd('nohup iperf3 -c {0} -p 5002 -M 1500 -C {1} -t {2} &'.format(h4.IP(), algorithm, run_time))
+    h4.cmd('nohup iperf3 -s -p 5002 &')
+    h2.cmd('nohup iperf3 -c {0} -p 5002 -M 1500 -C {1} -t {2} -i 1 > {3} &'.format(h4.IP(), algorithm, run_time, h4_iperf_file))
 
     time.sleep(run_time + 2)
 
