@@ -132,17 +132,17 @@ def run_test(algorithm, delay, run_time):
 
     h1, h2, h3, h4 = net.getNodeByName('h1', 'h2', 'h3', 'h4')
 
-    CLI(net)
+    # CLI(net)
 
     print("Starting Fairness test at", datetime.now().strftime("%H:%M:%S"))
 
     print("Starting TCP Flow #1")
     h3.cmd('nohup iperf3 -s -p 5001 -i 1 > {0} &'.format(h3_iperf_file))
-    h1.cmd('nohup iperf3 -c {0} -p 5001 -M 1500 -C {1} -t {2} > h1_client.txt &'.format(h3.IP(), algorithm, run_time))
+    h1.cmd('nohup iperf3 -c {0} -p 5001 -M 1500 -C {1} -t {2} &'.format(h3.IP(), algorithm, run_time))
 
     print("Starting TCP Flow #2")
     h4.cmd('nohup iperf3 -s -p 5002 -i 1 > {0} &'.format(h4_iperf_file))
-    h2.cmd('nohup iperf3 -c {0} -p 5002 -M 1500 -C {1} -t {2} > h2_client.txt &'.format(h4.IP(), algorithm, run_time))
+    h2.cmd('nohup iperf3 -c {0} -p 5002 -M 1500 -C {1} -t {2} &'.format(h4.IP(), algorithm, run_time))
 
     time.sleep(run_time + 2)
 
@@ -150,6 +150,8 @@ def run_test(algorithm, delay, run_time):
     h2.cmd(kill_iperf)
     h3.cmd(kill_iperf)
     h4.cmd(kill_iperf)
+
+    time.sleep(2)
 
     print("Starting CWND test at", datetime.now().strftime("%H:%M:%S"))
 
@@ -212,9 +214,9 @@ def run_test(algorithm, delay, run_time):
 
 if __name__ == '__main__':
 
-    algorithms = ['cubic'] #, 'reno', 'bbr', 'westwood']
+    algorithms = ['cubic', 'reno', 'bbr', 'westwood']
     delays = [21] #, 81, 162]
-    runtime = 600
+    runtime = 1000
 
     for _algorithm in algorithms:
         for _delay in delays:
