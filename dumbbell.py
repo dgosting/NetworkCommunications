@@ -48,14 +48,16 @@ class Dumbbell(Topo):
         h3 = self.addHost('h3')
         h4 = self.addHost('h4')
 
+        buffer_size = int(.2 * 21 * delay)
+
         # Link the left access router to the left backbone router
-        self.addLink(s3, s1, bw=252, max_queue_size=.2 * 21 * delay, use_htb=True)
+        self.addLink(s3, s1, bw=252, max_queue_size=buffer_size, use_htb=True)
 
         # Link the left and right backbone routers with a delay
         self.addLink(s1, s2, bw=984, delay=str(delay) + 'ms', use_htb=True)
 
         # Link the right access router to the right backbone router
-        self.addLink(s4, s2, bw=252, max_queue_size=.2 * 21 * delay, use_htb=True)
+        self.addLink(s4, s2, bw=252, max_queue_size=buffer_size, use_htb=True)
 
         # Link two hosts to the left access router
         self.addLink(h1, s3, bw=960)
@@ -132,7 +134,7 @@ def run_test(algorithm, delay, run_time):
 
     h1, h2, h3, h4 = net.getNodeByName('h1', 'h2', 'h3', 'h4')
 
-    CLI(net)
+    # CLI(net)
 
     print("Starting Fairness test at", datetime.now().strftime("%H:%M:%S"))
 
@@ -216,7 +218,7 @@ if __name__ == '__main__':
 
     algorithms = ['cubic'] # , 'reno', 'bbr', 'westwood']
     delays = [21] #, 81, 162]
-    runtime = 1000
+    runtime = 120
 
     for _algorithm in algorithms:
         for _delay in delays:
