@@ -88,7 +88,7 @@ def parse_cwnd_data(filename, offset):
 
             cwnd.append(cwnd_temp / 1500)
 
-    time_data = [x for x in range(0, len(throughput))]
+    time_data = [x for x in range(0, len(cwnd))]
 
     return time_data, cwnd
 
