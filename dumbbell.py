@@ -142,8 +142,8 @@ def run_test(algorithm, delay, run_time):
 
 if __name__ == '__main__':
 
-    algorithms = ['cubic'] # , 'reno', 'bbr', 'westwood']
-    delays = [21] #, 81, 162]
+    algorithms = ['cubic', 'reno', 'bbr', 'westwood']
+    delays = [21, 81, 162]
     runtime = 1000
 
     for _algorithm in algorithms:
