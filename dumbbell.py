@@ -68,50 +68,6 @@ class Dumbbell(Topo):
         self.addLink(h4, s4, bw=960)
 
 
-def parse_cwnd_data(filename, offset):
-    cwnd = []
-
-    if offset != 0:
-        cwnd = [0] * offset
-
-    with open(filename) as iperf_file:
-
-        lines = iperf_file.readlines()
-
-        for line_num in range(4, len(lines) - 8):
-            line = lines[line_num].split()
-
-            cwnd_temp = float(line[9])
-            cwnd_units = line[10]
-            if cwnd_units.startswith("K"):
-                cwnd_temp *= 1000
-            else:
-                cwnd_temp *= 1000000
-
-            cwnd.append(cwnd_temp / 1500)
-
-    time_data = [x for x in range(0, len(cwnd))]
-
-    return time_data, cwnd
-
-
-def parse_throughput_data(filename):
-
-    throughput = []
-
-    with open(filename) as iperf_file:
-
-        lines = iperf_file.readlines()
-
-        for line_num in range(8, len(lines) - 16):
-            line = lines[line_num].split()
-            throughput.append(float(line[6]))
-
-    time_data = [x for x in range(0, len(throughput))]
-
-    return time_data, throughput
-
-
 def run_test(algorithm, delay, run_time):
     # Clean up previous Mininet run
     os.system("sudo mn -c")
@@ -183,42 +139,12 @@ def run_test(algorithm, delay, run_time):
 
     print("Finished test at ", datetime.now().strftime("%H:%M:%S"), ". Now parsing data from files....")
 
-    # Make plot for Fairness
-    h3_time, h3_throughput = parse_throughput_data(h3_iperf_file)
-    h4_time, h4_throughput = parse_throughput_data(h4_iperf_file)
-    fig, ax = plt.subplots()
-
-    ax.plot(h3_time, h3_throughput, label="TCP Flow 1", linewidth=0.6)
-    ax.plot(h4_time, h4_throughput, label="TCP Flow 2", linewidth=0.6)
-
-    ax.set(xlabel='Time (seconds)',
-           ylabel='Throughput (Mbps)',
-           title=algorithm.upper() + " with Delay: " + str(delay) + "ms")
-
-    ax.legend()
-    file_name = "fairness_" + algorithm + "_" + str(delay) + "ms.png"
-    fig.savefig(file_name)
-
-    # Make plot for CWND
-    h1_time, h1_cwnd = parse_cwnd_data(h1_iperf_file, 0)
-    h2_time, h2_cwnd = parse_cwnd_data(h2_iperf_file, offset)
-    fig, ax = plt.subplots()
-    ax.plot(h1_time, h1_cwnd, label="TCP Flow 1", linewidth=0.6)
-    ax.plot(h2_time, h2_cwnd, label="TCP Flow 2", linewidth=0.6)
-
-    ax.set(xlabel='Time (seconds)',
-           ylabel='Congestion Window (packets)',
-           title=algorithm.upper() + " with Delay: " + str(delay) + "ms")
-    ax.legend()
-    file_name = "cwnd_" + algorithm + "_" + str(delay) + "ms.png"
-    fig.savefig(file_name)
-
 
 if __name__ == '__main__':
 
     algorithms = ['cubic'] # , 'reno', 'bbr', 'westwood']
     delays = [21] #, 81, 162]
-    runtime = 120
+    runtime = 1000
 
     for _algorithm in algorithms:
         for _delay in delays:
