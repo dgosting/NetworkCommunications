@@ -1,0 +1,25 @@
+#!/usr/local/bin/gnuplot
+
+set autoscale
+unset log
+unset label
+
+set xtic auto
+set ytic auto
+set title "Server Density vs. # of Distinct Paths"
+set xlabel "Server Density (# Servers / # Switches)"
+set ylabel "# of Distinct Paths"
+
+set autoscale y
+set autoscale x
+
+set style line 1 lt 1 lw 1 linecolor rgb "blue"
+set style line 2 lt 1 lw 1 linecolor rgb "green"
+set style line 3 lt 4 lw 2 linecolor rgb "red"
+
+set terminal png
+set output "density.png"
+
+plot "stats.txt" using 1:2 title "Min" w l ls 1, \
+    "stats.txt" using 1:3 title "Max" w l ls 2, \
+    "stats.txt" using 1:4 title "Average" w l ls 3

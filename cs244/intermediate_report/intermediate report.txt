@@ -1,0 +1,34 @@
+Introduction:
+
+
+Jellyfish is a novel topology for organizing data center networks. Unlike traditional techniques such as Fat-trees and other well defined structures, Jellyfish proposes a random graph topology for top-of-rack switches. The authors show that this approach is both more cost efficient and can support more servers with the same amount of equipment. Furthermore, Jellyfish topologies can maintain the same overall throughput as Fat-tree networks due to short average path length between nodes.
+
+Background and Results to Reproduce:
+
+
+Jellyfish uses a simulated random regular graph(RRG) to wire up top-of-rack switches in a data center network. The RRG algorithm simply add links between 2 random non-neighboring switches until there are no open ports remaining. In the case where there are still open ports but no links can be added, an existing link can be removed and the algorithm will proceed. This graph structure exhibits low average path length between servers. Consider the following figure,
+
+<INSERT FIGURE HERE>
+
+Most nodes in a Fat-tree network are 6 hops apart whereas in Jellyfish, most nodes are between 4-5 hops apart. Not only are paths shorter in Jellyfish, the RRG network also has more distinct paths between end hosts. This improves the fault tolerance of the overall network but requires different routing algorithms in order to maximize the benefits. We aim to reproduce the following figure from the original paper
+
+<INSERT FIGURE HERE>
+
+This figure shows that in order to fully maximize the path diversity in Jellyfish, traditional multi-path routing algorithms such as equal-cost multi path routing (ECMP) is not sufficient. Over 50% of links are only on 2 or fewer distinct paths between servers where as in k-shortest path routing, only around 6% are on 2 or fewer distinct paths. With newer TCP modes such as multi-path TCP, having more distinct paths can significantly increase the throughput of the sending server. We hope to replicate this experiment and verify that ECMP does in fact produce fewer distinct paths compared to the k-shortest path routing algorithm.
+
+Methods:
+
+
+We first generated a random regular graph with n servers and k ports per server. To closely approximate the topology as stipulated in figure of the paper, we created a python script $genGraph.py$ to spawn this for a total of 686 servers with 12 ports each. Then $traffic.py$ decides 686 pairs of nodes for $genPaths.py$ to calculate the $k=8$ shortest paths, 64-way ECMP, and 8-way ECMP for each. Finally, the ranking of the links and their corresponding distinct paths participation were plotted with $gnuplot$. 
+
+Our experiment ran on a Fedora 18 quad core Intel i5-3320M CPU @ 2.60GHz with 7G memory. It takes up to 5 minutes for the bash script to finish the experiment. Our results are reproducible on any Linux machine. 
+
+Outcome:
+
+
+To our delight, our plot looks almost identical to the plot of the graph. The step functions in our output mimic those in the graph, with some rank differences. The range and scope of the graphs are also correct as well. Therefore, we confidentaly summarize that the plot from the paper is valid and reproducible. 
+
+Issues:
+
+
+The vagueness of the topology for the plot was a hinderance during our development. In particular, there was no mention of number of ports per server. Deducing backwards from the ~2600 rank of link graph, we concluded that this k was 12. Another problem that arose was the absolute similarity between our 8-way EMCP and the 64-way EMCP number of distinct paths the links were on. That is, there were always only 8 or less shortest paths between every pair of source and destination that had the same lowest weight. 

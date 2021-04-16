@@ -1,0 +1,25 @@
+#!/usr/local/bin/gnuplot
+
+set autoscale
+unset log
+unset label
+
+set xtic auto
+set ytic auto
+set title "Figure 9"
+set xlabel "Rank of Link"
+set ylabel "# of Distinct Links"
+
+set autoscale y
+set autoscale x
+
+set style line 1 lt 1 lw 5 linecolor rgb "blue"
+set style line 2 lt 1 lw 1 linecolor rgb "red"
+set style line 3 lt 4 lw 1 linecolor rgb "green"
+
+set terminal png
+set output outputFile
+
+plot filename using 1:2 title "8 k-shortest paths" w l ls 1, \
+    filename using 1:3 title "8 way ECMP" w l ls 2, \
+    filename using 1:4 title "64 way ECMP" w l ls 3
